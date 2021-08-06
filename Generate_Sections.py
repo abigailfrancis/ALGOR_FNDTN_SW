@@ -12,11 +12,11 @@ def main():
     
     #supervisor TLBs
     DDR_1 = TLB("DDR 1", Access_Type.Supervisor, 0x40000000, pow_of_4(0x40000000 / KB), 0x00000000)
-    DDR_2 = TLB("DDR 2", Access_Type.Supervisor, 0x20000000, pow_of_4(0x20000000 / KB), 0x40000000)
-    DDR_3 = TLB("DDR 3", Access_Type.Supervisor, 0x10000000, pow_of_4(0x10000000 / KB), 0x60000000)
-    DDR_4 = TLB("DDR 4", Access_Type.Supervisor, 0x1000000, pow_of_4(0x1000000 / KB), 0x70000000)
-    DDR_5 = TLB("DDR 5", Access_Type.Supervisor, 0x200000, pow_of_4(0x200000 / KB), 0x71000000)
-    DDR_6 = TLB("DDR 6", Access_Type.Supervisor, 0x40000, pow_of_4(0x40000 / KB), 0x71200000)
+    DDR_2 = TLB("DDR 2", Access_Type.Supervisor, 0x10000000, pow_of_4(0x10000000 / KB), 0x40000000)
+    DDR_3 = TLB("DDR 3", Access_Type.Supervisor, 0x4000000, pow_of_4(0x4000000 / KB), 0x50000000)
+    DDR_4 = TLB("DDR 4", Access_Type.Supervisor, 0x1000000, pow_of_4(0x1000000 / KB), 0x54000000)
+    DDR_5 = TLB("DDR 5", Access_Type.Supervisor, 0x100000, pow_of_4(0x100000 / KB), 0x55000000)
+    DDR_6 = TLB("DDR 6", Access_Type.Supervisor, 0x40000, pow_of_4(0x40000 / KB), 0x55100000)
     
     MemoryMapTool.TLB_list = [DDR_1, DDR_2, DDR_3, DDR_4, DDR_5, DDR_6]
 
@@ -33,13 +33,15 @@ def Generate_Memory_Sections():
         while(size_fits):
             size_fits = True
             size = random.randint(1, int(user_TLB.size_in_kb * KB / 20))
-            alignment = random.choice([4, 8, 16, 32, 1024, 4096])
+            alignment = random.choice([4, 16, 64, 256, 1024, 4096]) # powers of 4 from 4 to 4096
             if len(temp_list) > 0:
                 for i in range(0, len(temp_list)):
                     # sort largest to smallest
                     if temp_list[i].size < size:
                         temp_list.insert(i, Memory("Memory_Section_" + user_TLB.name.replace(" ", "_") + "_" + str(Memory_number), user_TLB.name, size, alignment, user_TLB.start_address))
                         break
+                temp_list = sorted(sorted(temp_list, key=lambda x: x.size, reverse=True), key=lambda x: x.alignment, reverse=True))
+
                 # recalculate addresses
                 for i in range(0, len(temp_list)):
                     if i == 0:
