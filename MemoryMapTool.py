@@ -1,9 +1,11 @@
 from enum import Enum
 
-P1_TLB_list = []
-P2_TLB_list = []
-P1_Memory_list = []
-P2_Memory_list = []
+TLB_list = []
+Memory_list = []
+
+KB = 1024
+MB = 1024^2
+GB = 1024^3
 
 class Access_Type(Enum):
 	NONE = 0
@@ -39,19 +41,3 @@ class Memory:
 		self.size = size
 		self.alignment = alignment
 		self.start_address = start_address
-
-
-if __name__ == "__main__":
-	#supervisor TLBs
-	DDR_1 = TLB("DDR 1", Access_Type.Supervisor, 0x40000000, 0x100000, 0x00000000)
-	DDR_2 = TLB("DDR 2", Access_Type.Supervisor, 0x20000000, 0x80000, 0x40000000)
-	DDR_3 = TLB("DDR 3", Access_Type.Supervisor, 0x10000000, 0x40000, 0x60000000)
-	DDR_4 = TLB("DDR 4", Access_Type.Supervisor, 0x1000000, 0x4000, 0x70000000)
-	DDR_5 = TLB("DDR 5", Access_Type.Supervisor, 0x200000, 0x800, 0x71000000)
-	DDR_6 = TLB("DDR 6", Access_Type.Supervisor, 0x40000, 0x100, 0x71200000)
-	
-	P1_TLB_list = [DDR_1, DDR_2, DDR_3, DDR_4, DDR_5, DDR_6]
-	P2_TLB_list = [DDR_1, DDR_2, DDR_3, DDR_4, DDR_5, DDR_6]
-	
-	#print([i.name for i in P1_TLB_list])
-	#print([i.name for i in P2_TLB_list])
