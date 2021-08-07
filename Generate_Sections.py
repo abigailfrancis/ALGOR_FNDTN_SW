@@ -116,7 +116,7 @@ def Generate_TLBs():
                             size_fits = False
                             break
             else:
-                temp_list.append(TLB("User_TLB_" + supervisor_TLB.name.replace(" ", "_") + str(TLB_number), Access_Type.User, size, pow_of_4(size/KB), supervisor_TLB.start_address))
+                temp_list.append(TLB("User_TLB_" + supervisor_TLB.name.replace(" ", "_") + "_" + str(TLB_number), Access_Type.User, size, pow_of_4(size/KB), supervisor_TLB.start_address))
                 
             TLB_number = TLB_number + 1
             
