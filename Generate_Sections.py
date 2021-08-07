@@ -7,18 +7,56 @@ import csv
 
 def pow_of_4(n):
     return int(4 ** math.ceil(math.log(n, 4)))
-    
+
+   
 def main():
     
     #supervisor TLBs
     DDR_1 = TLB("DDR 1", Access_Type.Supervisor, 0x40000000, pow_of_4(0x40000000 / KB), 0x00000000)
-    DDR_2 = TLB("DDR 2", Access_Type.Supervisor, 0x10000000, pow_of_4(0x10000000 / KB), 0x40000000)
-    DDR_3 = TLB("DDR 3", Access_Type.Supervisor, 0x4000000, pow_of_4(0x4000000 / KB), 0x50000000)
-    DDR_4 = TLB("DDR 4", Access_Type.Supervisor, 0x1000000, pow_of_4(0x1000000 / KB), 0x54000000)
-    DDR_5 = TLB("DDR 5", Access_Type.Supervisor, 0x100000, pow_of_4(0x100000 / KB), 0x55000000)
-    DDR_6 = TLB("DDR 6", Access_Type.Supervisor, 0x40000, pow_of_4(0x40000 / KB), 0x55100000)
+    DDR_2 = TLB("DDR 2", Access_Type.Supervisor, 0x10000000, pow_of_4(0x10000000 / KB), DDR_1.start_address + DDR_1.size_in_kb * KB)
+    DDR_3 = TLB("DDR 3", Access_Type.Supervisor, 0x4000000, pow_of_4(0x4000000 / KB), DDR_2.start_address + DDR_2.size_in_kb * KB)
+    DDR_4 = TLB("DDR 4", Access_Type.Supervisor, 0x1000000, pow_of_4(0x1000000 / KB), DDR_3.start_address + DDR_3.size_in_kb * KB)
+    DDR_5 = TLB("DDR 5", Access_Type.Supervisor, 0x100000, pow_of_4(0x100000 / KB), DDR_4.start_address + DDR_4.size_in_kb * KB)
+    DDR_6 = TLB("DDR 6", Access_Type.Supervisor, 0x40000, pow_of_4(0x40000 / KB), DDR_5.start_address + DDR_5.size_in_kb * KB)
     
     MemoryMapTool.TLB_list = [DDR_1, DDR_2, DDR_3, DDR_4, DDR_5, DDR_6]
+
+    
+def compile_list(user_TLB, temp_list, Memory_number, temp_list_alignments):
+    size = random.randint(1, int(user_TLB.size_in_kb * KB / 20))
+    alignment = random.choice([4, 16, 64, 256, 1024, 4096]) # powers of 4 from 4 to 4096
+    temp_list_alignments[int(math.log(alignment, 4)) - 1].append(Memory("Memory_Section_" + user_TLB.name.replace(" ", "_") + "_" + str(Memory_number), user_TLB.name, size, alignment, user_TLB.start_address))
+    # sort in descending order
+    for sections in temp_list_alignments:
+        sections.sort(key=lambda x: x.size, reverse=True)
+    # put biggest alignments first
+    temp_list = deepcopy(temp_list_alignments[len(temp_list_alignments)-1])
+    # calculate addresses
+    for i in range(0, len(temp_list)):
+        if i == 0:
+            temp_list[i].start_address = user_TLB.start_address + (temp_list[i].alignment - 1) & ~(temp_list[i].alignment - 1)
+        else:
+            temp_list[i].start_address = temp_list[i-1].start_address + temp_list[i-1].size + (temp_list[i].alignment - 1) & ~(temp_list[i].alignment - 1)
+    for sections in [ele for ele in reversed(temp_list_alignments[:-1])]:
+        for section in sections:
+            inserted = False
+            for i in range(0, len(temp_list)-1):
+                if (((temp_list[i].start_address + temp_list[i].size + (section.alignment - 1)) & ~(section.alignment - 1)) + section.size) <= temp_list[i+1].start_address:
+                    section.start_address = temp_list[i].start_address + temp_list[i].size + (section.alignment - 1) & ~(section.alignment - 1)
+                    temp_list.insert(i+1, section)
+                    inserted = True
+                    break
+            if inserted == False:
+                if len(temp_list) == 0:
+                    section.start_address = user_TLB.start_address + (section.alignment - 1) & ~(section.alignment - 1)
+                    temp_list.append(section)
+                else:
+                    section.start_address = temp_list[len(temp_list)-1].start_address + temp_list[len(temp_list)-1].size + (section.alignment - 1) & ~(section.alignment - 1)
+                    if section.start_address > (user_TLB.start_address + user_TLB.size_in_kb * KB):
+                        return False
+                    temp_list.append(section)
+                    
+    return True
 
 
 def Generate_Memory_Sections():
@@ -30,32 +68,9 @@ def Generate_Memory_Sections():
         temp_list = []
         Memory_number = 0
         size_fits = True
+        temp_list_alignments = [[],[],[],[],[],[]]
         while(size_fits):
-            size_fits = True
-            size = random.randint(1, int(user_TLB.size_in_kb * KB / 20))
-            alignment = random.choice([4, 16, 64, 256, 1024, 4096]) # powers of 4 from 4 to 4096
-            if len(temp_list) > 0:
-                for i in range(0, len(temp_list)):
-                    # sort largest to smallest
-                    if temp_list[i].size < size:
-                        temp_list.insert(i, Memory("Memory_Section_" + user_TLB.name.replace(" ", "_") + "_" + str(Memory_number), user_TLB.name, size, alignment, user_TLB.start_address))
-                        break
-                temp_list = sorted(sorted(temp_list, key=lambda x: x.size, reverse=True), key=lambda x: x.alignment, reverse=True))
-
-                # recalculate addresses
-                for i in range(0, len(temp_list)):
-                    if i == 0:
-                        temp_list[i].start_address = (user_TLB.start_address + (temp_list[i].alignment - 1)) & ~(temp_list[i].alignment - 1)
-                    else:
-                        temp_list[i].start_address = (temp_list[i-1].start_address + temp_list[i-1].size + (temp_list[i].alignment - 1)) & ~(temp_list[i].alignment - 1)
-                        # check if it fits
-                        if (temp_list[i].start_address + temp_list[i].size) > (user_TLB.start_address + user_TLB.size_in_kb * KB):
-                            # doesn't fit, remove and stop
-                            del temp_list[i:len(temp_list)]
-                            size_fits = False
-                            break
-            else:
-                temp_list.append(Memory("Memory_Section_" + user_TLB.name.replace(" ", "_") + "_" + str(Memory_number), user_TLB.name, size, alignment, user_TLB.start_address))
+            size_fits = compile_list(user_TLB, temp_list, Memory_number, temp_list_alignments)
                 
             Memory_number = Memory_number + 1
             
@@ -121,7 +136,7 @@ def Create_CSV(case):
     with open('generated_tlbs_' + case + '.csv', 'w') as f:
         write = csv.writer(f)
         write.writerow(fields)
-        write.writerows([[i.name, hex(i.min_size), hex(i.size_in_kb), hex(i.start_address)] for i in MemoryMapTool.TLB_list])
+        write.writerows([[i.name, hex(i.min_size), hex(i.size_in_kb), hex(i.start_address)] for i in MemoryMapTool.TLB_list if i.access_type == Access_Type.User])
         
         
     fields = ['Name', 'TLB', 'Size', 'Alignment', 'Start Address']
