@@ -22,7 +22,7 @@ def main():
     MemoryMapTool.TLB_list = [DDR_1, DDR_2, DDR_3, DDR_4, DDR_5, DDR_6]
 
     
-def compile_list(user_TLB, temp_list, Memory_number, temp_list_alignments):
+def compile_list(user_TLB, Memory_number, temp_list_alignments):
     size = random.randint(1, int(user_TLB.size_in_kb * KB / 20))
     alignment = random.choice([4, 16, 64, 256, 1024, 4096]) # powers of 4 from 4 to 4096
     temp_list_alignments[int(math.log(alignment, 4)) - 1].append(Memory("Memory_Section_" + user_TLB.name.replace(" ", "_") + "_" + str(Memory_number), user_TLB.name, size, alignment, user_TLB.start_address))
@@ -53,10 +53,10 @@ def compile_list(user_TLB, temp_list, Memory_number, temp_list_alignments):
                 else:
                     section.start_address = temp_list[len(temp_list)-1].start_address + temp_list[len(temp_list)-1].size + (section.alignment - 1) & ~(section.alignment - 1)
                     if section.start_address > (user_TLB.start_address + user_TLB.size_in_kb * KB):
-                        return False
+                        return False, temp_list
                     temp_list.append(section)
                     
-    return True
+    return True, temp_list
 
 
 def Generate_Memory_Sections():
@@ -70,7 +70,7 @@ def Generate_Memory_Sections():
         size_fits = True
         temp_list_alignments = [[],[],[],[],[],[]]
         while(size_fits):
-            size_fits = compile_list(user_TLB, temp_list, Memory_number, temp_list_alignments)
+            size_fits, temp_list = compile_list(user_TLB, Memory_number, temp_list_alignments)
                 
             Memory_number = Memory_number + 1
             
