@@ -140,8 +140,8 @@ def Create_CSV(case):
         
         
     fields = ['Name', 'TLB', 'Size', 'Alignment', 'Start Address']
-    with open('generated_memory_sections_' + case + '.csv', 'w') as f:
-        write = csv.writer(f)
+    with open('generated_memory_sections_' + case + '.csv', 'w') as g:
+        write = csv.writer(g)
         write.writerow(fields)
         write.writerows([[i.name, i.TLB, hex(i.size), hex(i.alignment), hex(i.start_address)] for i in MemoryMapTool.Memory_list])
 
