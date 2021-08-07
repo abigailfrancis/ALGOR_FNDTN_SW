@@ -136,16 +136,39 @@ def Shuffle():
 
     
 def Create_CSV(case):
-    fields = ['Name', 'Min Size', 'Size In KB', 'Start Address']
+    fields = ['Name', 'Min Size', 'Size In KB']
     with open('generated_tlbs_' + case + '.csv', 'w') as f:
         write = csv.writer(f)
+        write.writerow(fields)
+        write.writerows([[i.name, hex(i.min_size), hex(i.size_in_kb)] for i in MemoryMapTool.TLB_list if i.access_type == Access_Type.User])
+        
+        
+    fields = ['Name', 'TLB', 'Size', 'Alignment']
+    with open('generated_memory_sections_' + case + '.csv', 'w') as g:
+        write = csv.writer(g)
+        write.writerow(fields)
+        write.writerows([[i.name, i.TLB, hex(i.size), hex(i.alignment)] for i in MemoryMapTool.Memory_list])
+        
+
+def Create_CSV_Supervisor_TLBS():
+    fields = ['Name', 'Min Size', 'Size In KB', 'Start Address']
+    with open('supervisor_tlbs.csv', 'w') as h:
+        write = csv.writer(h)
+        write.writerow(fields)
+        write.writerows([[i.name, hex(i.min_size), hex(i.size_in_kb), hex(i.start_address)] for i in MemoryMapTool.TLB_list if i.access_type == Access_Type.Supervisor])
+
+
+def Create_CSV_Check():
+    fields = ['Name', 'Min Size', 'Size In KB', 'Start Address']
+    with open('sorted_tlbs_expected.csv', 'w') as x:
+        write = csv.writer(x)
         write.writerow(fields)
         write.writerows([[i.name, hex(i.min_size), hex(i.size_in_kb), hex(i.start_address)] for i in MemoryMapTool.TLB_list if i.access_type == Access_Type.User])
         
         
     fields = ['Name', 'TLB', 'Size', 'Alignment', 'Start Address']
-    with open('generated_memory_sections_' + case + '.csv', 'w') as g:
-        write = csv.writer(g)
+    with open('sorted_memory_sections_expected.csv', 'w') as y:
+        write = csv.writer(y)
         write.writerow(fields)
         write.writerows([[i.name, i.TLB, hex(i.size), hex(i.alignment), hex(i.start_address)] for i in MemoryMapTool.Memory_list])
 
@@ -159,3 +182,5 @@ if __name__ == "__main__":
     Create_CSV('worst_case')
     Shuffle()
     Create_CSV('average_case')
+    Create_CSV_Supervisor_TLBS()
+    Create_CSV_Check()
