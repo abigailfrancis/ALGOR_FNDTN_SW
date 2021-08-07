@@ -93,11 +93,15 @@ def Generate_TLBs():
             size_fits = True
             size = random.randint(1, supervisor_TLB.size_in_kb * KB / 4)
             if len(temp_list) > 0:
+                inserted = False
                 for i in range(0, len(temp_list)):
                     # sort largest to smallest
                     if temp_list[i].min_size < size:
                         temp_list.insert(i, TLB("User_TLB_" + supervisor_TLB.name.replace(" ", "_") + "_" + str(TLB_number), Access_Type.User, size, pow_of_4(size/KB), supervisor_TLB.start_address))
+                        inserted = True
                         break
+                if inserted == False:
+                    temp_list.append(TLB("User_TLB_" + supervisor_TLB.name.replace(" ", "_") + "_" + str(TLB_number), Access_Type.User, size, pow_of_4(size/KB), supervisor_TLB.start_address))
                 # recalculate addresses
                 for i in range(0, len(temp_list)):
                     # first one must be aligned to its own size
