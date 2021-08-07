@@ -1,7 +1,7 @@
 Name,TLB,Size,Alignment,Start Address
-Mem1,DDR1,3,0,
-Mem1,DDR1,4,0,
-Mem1,DDR1,5,0,
-Mem1,DDR1,1,0,
-Mem1,DDR1,2,0,
-Mem1,DDR1,2,0,
+Mem1,DDR1,3,4,
+Mem1,DDR1,4,256,
+Mem1,DDR1,5,256,
+Mem1,DDR1,1,1024,
+Mem1,DDR1,2,4096,
+Mem1,DDR1,2,4,
