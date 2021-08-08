@@ -140,14 +140,14 @@ def Create_CSV(case):
     with open('generated_tlbs_' + case + '.csv', 'w') as f:
         write = csv.writer(f)
         write.writerow(fields)
-        write.writerows([[i.name, hex(i.min_size), hex(i.size_in_kb), hex(i.start_address)] for i in MemoryMapTool.TLB_list if i.access_type == Access_Type.User])
+        write.writerows([[i.name, hex(i.min_size).replace("0x", ""), hex(i.size_in_kb).replace("0x", ""), hex(i.start_address).replace("0x", "")] for i in MemoryMapTool.TLB_list if i.access_type == Access_Type.User])
         
         
     fields = ['Name', 'TLB', 'Size', 'Alignment', 'Start Address']
     with open('generated_memory_sections_' + case + '.csv', 'w') as g:
         write = csv.writer(g)
         write.writerow(fields)
-        write.writerows([[i.name, i.TLB, hex(i.size), hex(i.alignment), hex(i.start_address)] for i in MemoryMapTool.Memory_list])
+        write.writerows([[i.name, i.TLB, hex(i.size).replace("0x", ""), hex(i.alignment).replace("0x", ""), hex(i.start_address).replace("0x", "")] for i in MemoryMapTool.Memory_list])
 
 
 if __name__ == "__main__":
