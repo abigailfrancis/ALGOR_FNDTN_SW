@@ -150,7 +150,7 @@ def Create_CSV(case):
         write.writerows([[i.name, i.TLB, hex(i.size).replace("0x", ""), hex(i.alignment).replace("0x", ""), hex(i.start_address).replace("0x", "")] for i in MemoryMapTool.Memory_list])
 
 
-if __name__ == "__main__":
+def Generate_Sections():
     main()
     Generate_TLBs()
     Generate_Memory_Sections()
