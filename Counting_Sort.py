@@ -1,5 +1,6 @@
 import csv
 from copy import deepcopy
+import math
 
 def CountingSortStringPrep(arr, index):
 
@@ -81,7 +82,34 @@ def CountingSort(arr, index):
     arr = output
     
     return arr, max_in-min_in
+    
+    
+def Buckets(arr):
 
+    x = 0
+    buckets_tlb = []
+    
+    # put TLBs in buckets
+    for i in range(len(arr)):
+        if i == 0: 
+            buckets_tlb.append([])
+            buckets_tlb[x].append(arr[i])
+        elif arr[i-1][1] != arr[i][1]:
+            buckets_tlb.append([])
+            x += 1
+            buckets_tlb[x].append(arr[i])
+        else:
+            buckets_tlb[x].append(arr[i])
+    
+    buckets_align = []
+    
+    # put alignment into buckets
+    for i in range(len(buckets_tlb)):
+        buckets_align.append([[],[],[],[],[],[]])
+        for j in range(len(buckets_tlb[i])):
+            buckets_align[i][int(math.log(int("0x"+buckets_tlb[i][j][3], 16), 4)) - 1].append(buckets_tlb[i][j])
+
+    return buckets_align
 
 # put information into list
 with open('generated_memory_sections_average_case.csv', newline='') as f:
@@ -94,14 +122,15 @@ data = [x for x in data if x and x[0] != 'Name']
 # then sort by size
 # O(n + k)
 data, k = CountingSort(data, 2)
-print(k)
 
 # then sort by alignment
 # O(n + k)
 data, k = CountingSort(data, 3)
-print(k)
 
 # sort by TLB last
 # O(n + 10)
 converted_array = CountingSortStringPrep(data, 1)
 data = CountingSortString(data, 1, converted_array)
+
+# put into buckets by TLB
+Buckets = Buckets(data)
