@@ -58,18 +58,19 @@ def CountingSort(arr, index):
 
     arr_copy = deepcopy(arr)
     
-    max_size = max([int("0x"+el[index], 16) for el in arr_copy])
+    max_in = max([int("0x"+el[index], 16) for el in arr_copy])
+    min_in = min([int("0x"+el[index], 16) for el in arr_copy])
     
     arr_copy = [[int("0x"+x, 16) if i == index else x for i,x in enumerate(y)] for y in arr_copy]
     
     output = [None for i in range(len(arr))]
     
-    count = [0 for i in range(max_size+1)]
+    count = [0 for i in range(max_in+1)]
     
     for i in arr_copy:
         count[i[index]] += 1
         
-    for i in range(len(count)):
+    for i in range(min_in, len(count)):
         if i != 0:
             count[i] += count[i-1]
         
@@ -79,7 +80,7 @@ def CountingSort(arr, index):
             
     arr = output
     
-    return arr
+    return arr, max_in-min_in
 
 
 # put information into list
@@ -91,11 +92,16 @@ with open('generated_memory_sections_average_case.csv', newline='') as f:
 data = [x for x in data if x and x[0] != 'Name']
 
 # then sort by size
-data = CountingSort(data, 2)
+# O(n + k)
+data, k = CountingSort(data, 2)
+print(k)
 
 # then sort by alignment
-data = CountingSort(data, 3)
+# O(n + k)
+data, k = CountingSort(data, 3)
+print(k)
 
 # sort by TLB last
+# O(n + 10)
 converted_array = CountingSortStringPrep(data, 1)
 data = CountingSortString(data, 1, converted_array)
