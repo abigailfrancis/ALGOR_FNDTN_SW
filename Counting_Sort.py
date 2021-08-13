@@ -1,20 +1,22 @@
 import csv
-
+from copy import deepcopy
 
 def CountingSortStringPrep(arr, index):
 
     # sort arr by element at index
+    
+    arr_copy = deepcopy(arr)
 
-    length = len(max([el[index].replace('User_TLB_DDR_', '').replace('_', '') for el in arr], key = len))
+    length = len(max([el[index].replace('User_TLB_DDR_', '').replace('_', '') for el in arr_copy], key = len))
     
     characters = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     
-    for el in arr:
+    for el in arr_copy:
         el[index] = el[index].replace('User_TLB_DDR_', '').replace('_', '').ljust(length, '*')
     
     converted_arr = []
     
-    for el in arr:
+    for el in arr_copy:
         converted_data = [characters.index(i.lower()) for i in el[index]]
         converted_arr.append(converted_data)
 
@@ -40,8 +42,16 @@ def CountingSortString(arr, index, converted_arr):
             else:
                 count[x][y] = count[x][y-1] + count[x][y]
     
-    print(count)
-            
+    sorted_arr = [None for i in range(len(arr))]
+
+    # determine position in sorted array
+    for x in range(len(converted_arr)):   
+        sorted_arr[count[converted_arr[x][0]][converted_arr[x][1]] - 1] = deepcopy(arr[x])
+        count[converted_arr[x][0]][converted_arr[x][1]] -= 1
+    
+    arr = sorted_arr
+    
+    return arr
 
 # put information into list
 with open('generated_memory_sections_average_case.csv', newline='') as f:
@@ -52,4 +62,4 @@ with open('generated_memory_sections_average_case.csv', newline='') as f:
 data = [x for x in data if x and x[0] != 'Name']
     
 converted_array = CountingSortStringPrep(data, 1)
-CountingSortString(data, 1, converted_array)
+data = CountingSortString(data, 1, converted_array)
