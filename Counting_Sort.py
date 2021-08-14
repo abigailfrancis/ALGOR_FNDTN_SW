@@ -76,7 +76,7 @@ def CountingSort(arr, index):
             count[i] += count[i-1]
         
     for i in range(len(arr_copy)):
-        output[count[arr_copy[i][index]]-1] = deepcopy(arr[i])
+        output[len(arr_copy)-count[arr_copy[i][index]]] = deepcopy(arr[i])
         count[arr_copy[i][index]] -= 1
             
     arr = output
@@ -107,9 +107,16 @@ def Buckets(arr):
     for i in range(len(buckets_tlb)):
         buckets_align.append([[],[],[],[],[],[]])
         for j in range(len(buckets_tlb[i])):
-            buckets_align[i][int(math.log(int("0x"+buckets_tlb[i][j][3], 16), 4)) - 1].append(buckets_tlb[i][j])
+            buckets_align[i][6 - int(math.log(int("0x"+buckets_tlb[i][j][3], 16), 4))].append(buckets_tlb[i][j])
 
     return buckets_align
+    
+# def address_calculation(arr):
+
+    # for i in arr:
+        # for j in arr[i]:
+            # for k in arr[i][j]:
+                
 
 # put information into list
 with open('generated_memory_sections_average_case.csv', newline='') as f:
