@@ -1,6 +1,7 @@
 import csv
 from copy import deepcopy
 import math
+import sys, threading
 
 def CountingSortStringPrep(arr, index):
 
@@ -82,6 +83,75 @@ def CountingSort(arr, index):
     
     return arr, max_in-min_in
     
+def MergeSort(arr, index):
+
+    if len(arr) > 1:
+    
+        mid = len(arr)//2
+        
+        L = arr[:mid]
+        
+        R = arr[mid:]
+        
+        MergeSort(L, index)
+        
+        MergeSort(R, index)
+        
+        i = j = k = 0
+        
+        while i < len(L) and j < len(R):
+            if int("0x"+L[i][index],16) > int("0x"+R[j][index],16):
+                arr[k] = L[i]
+                i += 1
+            else:
+                arr[k] = R[j]
+                j += 1
+            k += 1
+            
+        while i < len(L):
+            arr[k] = L[i]
+            i += 1
+            k += 1
+            
+        while j < len(R):
+            arr[k] = R[j]
+            j += 1
+            k += 1
+            
+def MergeSortString(arr, index):
+
+    if len(arr) > 1:
+    
+        mid = len(arr)//2
+        
+        L = arr[:mid]
+        
+        R = arr[mid:]
+        
+        MergeSortString(L, index)
+        
+        MergeSortString(R, index)
+        
+        i = j = k = 0
+        
+        while i < len(L) and j < len(R):
+            if max(L[i][index].lower(), R[j][index].lower()) == L[i][index].lower():
+                arr[k] = L[i]
+                i += 1
+            else:
+                arr[k] = R[j]
+                j += 1
+            k += 1
+            
+        while i < len(L):
+            arr[k] = L[i]
+            i += 1
+            k += 1
+            
+        while j < len(R):
+            arr[k] = R[j]
+            j += 1
+            k += 1
     
 def Buckets(arr):
 
@@ -149,38 +219,116 @@ def address_calculation(arr, TLB_arr):
     return temp_list_finished
                 
 
-# put information into list
-with open('generated_memory_sections_average_case.csv', newline='') as f:
-	reader = csv.reader(f)
-	memory_data = list(reader)
+def counting_sort_addresses():
+    # put information into list
+    with open('generated_memory_sections_average_case.csv', newline='') as f:
+        reader = csv.reader(f)
+        memory_data = list(reader)
+        
+    with open('generated_tlbs_average_case.csv', newline='') as g:
+        reader = csv.reader(g)
+        TLB_data = list(reader)
+        
+    # remove blank lines and headers
+    memory_data = [x for x in memory_data if x and x[0] != 'Name']
+
+    TLB_data = [x for x in TLB_data if x and x[0] != 'Name']
+
+    # then sort by size
+    # O(n + k)
+    memory_data, k = CountingSort(memory_data, 2)
+
+    # then sort by alignment
+    # O(n + k)
+    memory_data, k = CountingSort(memory_data, 3)
+
+    # sort by TLB last
+    # O(n + 10)
+    converted_array = CountingSortStringPrep(memory_data, 1)
+    memory_data = CountingSortString(memory_data, 1, converted_array)
+
+    # put into buckets by TLB
+    buckets = Buckets(memory_data)
+
+    # calculate addresses
+    finished_memory = address_calculation(buckets, TLB_data)
+
+    # sort ascending - cant use counting sort because too much data
+    finished_memory = sorted(finished_memory, key = lambda x: int("0x"+x[4],16))
+
     
-with open('generated_tlbs_average_case.csv', newline='') as g:
-	reader = csv.reader(g)
-	TLB_data = list(reader)
+def merge_sort_addresses():
+    # put information into list
+    with open('generated_memory_sections_average_case.csv', newline='') as f:
+        reader = csv.reader(f)
+        memory_data = list(reader)
+        
+    with open('generated_tlbs_average_case.csv', newline='') as g:
+        reader = csv.reader(g)
+        TLB_data = list(reader)
+        
+    # remove blank lines and headers
+    memory_data = [x for x in memory_data if x and x[0] != 'Name']
+
+    TLB_data = [x for x in TLB_data if x and x[0] != 'Name']
     
-# remove blank lines and headers
-memory_data = [x for x in memory_data if x and x[0] != 'Name']
+    # then sort by size
+    # O(n log n)
+    MergeSort(memory_data, 2)
 
-TLB_data = [x for x in TLB_data if x and x[0] != 'Name']
+    # then sort by alignment
+    # O(n log n)
+    MergeSort(memory_data, 3)
 
-# then sort by size
-# O(n + k)
-memory_data, k = CountingSort(memory_data, 2)
+    # sort by TLB last
+    # O(n log n)
+    MergeSortString(memory_data, 1)
 
-# then sort by alignment
-# O(n + k)
-memory_data, k = CountingSort(memory_data, 3)
+    # put into buckets by TLB
+    buckets = Buckets(memory_data)
 
-# sort by TLB last
-# O(n + 10)
-converted_array = CountingSortStringPrep(memory_data, 1)
-memory_data = CountingSortString(memory_data, 1, converted_array)
+    # calculate addresses
+    finished_memory = address_calculation(buckets, TLB_data)
 
-# put into buckets by TLB
-Buckets = Buckets(memory_data)
+    # sort ascending
+    finished_memory = sorted(finished_memory, key = lambda x: int("0x"+x[4],16))
+    
+def python_sort_addresses():
+    # put information into list
+    with open('generated_memory_sections_average_case.csv', newline='') as f:
+        reader = csv.reader(f)
+        memory_data = list(reader)
+        
+    with open('generated_tlbs_average_case.csv', newline='') as g:
+        reader = csv.reader(g)
+        TLB_data = list(reader)
+        
+    # remove blank lines and headers
+    memory_data = [x for x in memory_data if x and x[0] != 'Name']
 
-# calculate addresses
-finished_memory = address_calculation(Buckets, TLB_data)
+    TLB_data = [x for x in TLB_data if x and x[0] != 'Name']
+    
+    # then sort by size
+    # O(n log n)
+    memory_data = sorted(memory_data, key = lambda x: int("0x"+x[2],16), reverse=True)
 
-# sort ascending - cant use counting sort because too much data
-finished_memory = sorted(finished_memory, key = lambda x: int("0x"+x[4],16))
+    # then sort by alignment
+    # O(n log n)
+    memory_data = sorted(memory_data, key = lambda x: int("0x"+x[3],16), reverse=True)
+
+    # sort by TLB last
+    # O(n log n)
+    memory_data = sorted(memory_data, key = lambda x: x[1].lower(), reverse=True)
+
+    # put into buckets by TLB
+    buckets = Buckets(memory_data)
+
+    # calculate addresses
+    finished_memory = address_calculation(buckets, TLB_data)
+
+    # sort ascending
+    finished_memory = sorted(finished_memory, key = lambda x: int("0x"+x[4],16))
+    
+counting_sort_addresses()
+merge_sort_addresses()
+python_sort_addresses()
