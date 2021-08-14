@@ -1,7 +1,8 @@
 import csv
 from copy import deepcopy
 import math
-import sys, threading
+import time
+import statistics
 
 def CountingSortStringPrep(arr, index):
 
@@ -252,13 +253,13 @@ def address_calculation(arr, TLB_arr):
     return temp_list_finished
                 
 
-def counting_sort_addresses():
+def counting_sort_addresses(input_case):
     # put information into list
-    with open('generated_memory_sections_average_case.csv', newline='') as f:
+    with open('generated_memory_sections_'+input_case+'_case.csv', newline='') as f:
         reader = csv.reader(f)
         memory_data = list(reader)
         
-    with open('generated_tlbs_average_case.csv', newline='') as g:
+    with open('generated_tlbs_'+input_case+'_case.csv', newline='') as g:
         reader = csv.reader(g)
         TLB_data = list(reader)
         
@@ -290,13 +291,13 @@ def counting_sort_addresses():
     finished_memory = sorted(finished_memory, key = lambda x: int("0x"+x[4],16))
 
     
-def merge_sort_addresses():
+def merge_sort_addresses(input_case):
     # put information into list
-    with open('generated_memory_sections_average_case.csv', newline='') as f:
+    with open('generated_memory_sections_'+input_case+'_case.csv', newline='') as f:
         reader = csv.reader(f)
         memory_data = list(reader)
         
-    with open('generated_tlbs_average_case.csv', newline='') as g:
+    with open('generated_tlbs_'+input_case+'_case.csv', newline='') as g:
         reader = csv.reader(g)
         TLB_data = list(reader)
         
@@ -304,10 +305,6 @@ def merge_sort_addresses():
     memory_data = [x for x in memory_data if x and x[0] != 'Name']
 
     TLB_data = [x for x in TLB_data if x and x[0] != 'Name']
-    
-    # then sort by size
-    # O(n log n)
-    #MergeSort(memory_data, 2)
 
     # then sort by alignment
     # O(n log n)
@@ -326,13 +323,13 @@ def merge_sort_addresses():
     # sort ascending
     finished_memory = sorted(finished_memory, key = lambda x: int("0x"+x[4],16))
     
-def python_sort_addresses():
+def python_sort_addresses(input_case):
     # put information into list
-    with open('generated_memory_sections_average_case.csv', newline='') as f:
+    with open('generated_memory_sections_'+input_case+'_case.csv', newline='') as f:
         reader = csv.reader(f)
         memory_data = list(reader)
         
-    with open('generated_tlbs_average_case.csv', newline='') as g:
+    with open('generated_tlbs_'+input_case+'_case.csv', newline='') as g:
         reader = csv.reader(g)
         TLB_data = list(reader)
         
@@ -361,7 +358,91 @@ def python_sort_addresses():
 
     # sort ascending
     finished_memory = sorted(finished_memory, key = lambda x: int("0x"+x[4],16))
+
+best_counting = []
+best_merge = []
+best_python = []
+average_counting = []
+average_merge = []
+average_python = []
+worst_counting = []
+worst_merge = []
+worst_python = []
+
+for i in range(0,30):
+
+    print("Running Counting Sort Best")
     
-counting_sort_addresses()
-merge_sort_addresses()
-python_sort_addresses()
+    start = time.perf_counter()
+    counting_sort_addresses('best')
+    stop = time.perf_counter()
+    best_counting.append(stop - start)
+    
+    print("Running Merge Sort Best")
+
+    start = time.perf_counter()
+    merge_sort_addresses('best')
+    stop = time.perf_counter()
+    best_merge.append(stop - start)
+    
+    print("Running TimSort Best")
+
+    start = time.perf_counter()
+    python_sort_addresses('best')
+    stop = time.perf_counter()
+    best_python.append(stop - start)
+    
+    print("Running Counting Sort Average")
+
+    start = time.perf_counter()
+    counting_sort_addresses('average')
+    stop = time.perf_counter()
+    average_counting.append(stop - start)
+    
+    print("Running Merge Sort Average")
+
+    start = time.perf_counter()
+    merge_sort_addresses('average')
+    stop = time.perf_counter()
+    average_merge.append(stop - start)
+    
+    print("Running TimSort Average")
+
+    start = time.perf_counter()
+    python_sort_addresses('average')
+    stop = time.perf_counter()
+    average_python.append(stop - start)
+    
+    print("Running Counting Sort Worst")
+
+    start = time.perf_counter()
+    counting_sort_addresses('worst')
+    stop = time.perf_counter()
+    worst_counting.append(stop - start)
+
+    print("Running Merge Sort Worst")
+
+    start = time.perf_counter()
+    merge_sort_addresses('worst')
+    stop = time.perf_counter()
+    worst_merge.append(stop - start)
+    
+    print("Running TimSort Worst")
+
+    start = time.perf_counter()
+    python_sort_addresses('worst')
+    stop = time.perf_counter()
+    worst_python.append(stop - start)
+    
+    print(i)
+    
+print('MEAN Best Case Counting Sort: ' + str(statistics.mean(best_counting)))
+print('MEAN Best Case Merge Sort: ' + str(statistics.mean(best_merge)))
+print('MEAN Best Case TimSort: ' + str(statistics.mean(best_python)))
+print('MEAN Average Case Counting Sort: ' + str(statistics.mean(average_counting)))
+print('MEAN Average Case Merge Sort: ' + str(statistics.mean(average_merge)))
+print('MEAN Average Case TimSort: ' + str(statistics.mean(average_merge)))
+print('MEAN Worst Case Counting Sort: ' + str(statistics.mean(worst_counting)))
+print('MEAN Worst Case Merge Sort: ' + str(statistics.mean(worst_merge)))
+print('MEAN Worst Case TimSort: ' + str(statistics.mean(worst_python)))
+
