@@ -180,6 +180,39 @@ def Buckets(arr):
     
     return buckets_align
     
+    
+def Buckets_Merge(arr):
+
+    x = 0
+    buckets_tlb = []
+    
+    # put TLBs in buckets
+    for i in range(len(arr)):
+        if i == 0: 
+            buckets_tlb.append([])
+            buckets_tlb[x].append(arr[i])
+        elif arr[i-1][1] != arr[i][1]:
+            buckets_tlb.append([])
+            x += 1
+            buckets_tlb[x].append(arr[i])
+        else:
+            buckets_tlb[x].append(arr[i])
+    
+    buckets_align = []
+    
+    # put alignment into buckets
+    for i in range(len(buckets_tlb)):
+        buckets_align.append([[],[],[],[],[],[]])
+        for j in range(len(buckets_tlb[i])):
+            buckets_align[i][6 - int(math.log(int("0x"+buckets_tlb[i][j][3], 16), 4))].append(buckets_tlb[i][j])
+            
+    for TLB in range(len(buckets_align)):
+        for alignment in range(len(buckets_align[TLB])):
+            MergeSort(buckets_align[TLB][alignment], 2)
+    
+    return buckets_align
+
+    
 def address_calculation(arr, TLB_arr):
 
     temp_list_finished = []
@@ -274,7 +307,7 @@ def merge_sort_addresses():
     
     # then sort by size
     # O(n log n)
-    MergeSort(memory_data, 2)
+    #MergeSort(memory_data, 2)
 
     # then sort by alignment
     # O(n log n)
@@ -285,7 +318,7 @@ def merge_sort_addresses():
     MergeSortString(memory_data, 1)
 
     # put into buckets by TLB
-    buckets = Buckets(memory_data)
+    buckets = Buckets_Merge(memory_data)
 
     # calculate addresses
     finished_memory = address_calculation(buckets, TLB_data)
