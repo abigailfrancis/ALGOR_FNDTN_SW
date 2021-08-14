@@ -47,14 +47,13 @@ def CountingSortString(arr, index, converted_arr):
 
     # determine position in sorted array
     for x in range(len(converted_arr)):   
-        sorted_arr[count[converted_arr[x][0]][converted_arr[x][1]] - 1] = deepcopy(arr[x])
+        sorted_arr[len(converted_arr) - count[converted_arr[x][0]][converted_arr[x][1]]] = deepcopy(arr[x])
         count[converted_arr[x][0]][converted_arr[x][1]] -= 1
     
     arr = sorted_arr
     
     return arr
-    
-    
+
 def CountingSort(arr, index):
 
     arr_copy = deepcopy(arr)
@@ -76,10 +75,10 @@ def CountingSort(arr, index):
             count[i] += count[i-1]
         
     for i in range(len(arr_copy)):
-        output[len(arr_copy)-count[arr_copy[i][index]]] = deepcopy(arr[i])
+        output[count[arr_copy[i][index]]-1] = deepcopy(arr[i])
         count[arr_copy[i][index]] -= 1
             
-    arr = output
+    arr = output[::-1]
     
     return arr, max_in-min_in
     
@@ -108,36 +107,80 @@ def Buckets(arr):
         buckets_align.append([[],[],[],[],[],[]])
         for j in range(len(buckets_tlb[i])):
             buckets_align[i][6 - int(math.log(int("0x"+buckets_tlb[i][j][3], 16), 4))].append(buckets_tlb[i][j])
-
+    
     return buckets_align
     
-# def address_calculation(arr):
+def address_calculation(arr, TLB_arr):
 
-    # for i in arr:
-        # for j in arr[i]:
-            # for k in arr[i][j]:
+    temp_list_finished = []
+    
+    # index 4 = start address
+    # index 3 = alignment
+    # index 2 = size
+    # index 1 = name of TLB
+
+    for TLB in arr:
+        # place biggest addresses first
+        temp_list = deepcopy(TLB[0])
+        for i in range(len(temp_list)):
+            if i == 0:
+                temp_list[i][4] = hex(int("0x"+next((x[3] for x in TLB_arr if x[0] == temp_list[i][1])),16) + (int("0x"+temp_list[i][3],16) - 1) & ~(int("0x"+temp_list[i][3],16) - 1)).replace("0x","")
+            else:
+                temp_list[i][4] = hex(int("0x"+temp_list[i-1][4],16) + int("0x"+temp_list[i-1][2],16) + (int("0x"+temp_list[i][3],16) - 1) & ~(int("0x"+temp_list[i][3],16) - 1)).replace("0x","")
+        for alignment in TLB[1:]:
+            for section in alignment:
+                inserted = False
+                for i in range(len(temp_list)-1):
+                    if (((int("0x"+temp_list[i][4],16) + int("0x"+temp_list[i][2],16) + (int("0x"+section[3],16) - 1)) & ~(int("0x"+section[3],16) - 1)) + int("0x"+section[2],16)) <= int("0x"+temp_list[i+1][4],16):
+                        section[4] = hex(int("0x"+temp_list[i][4],16) + int("0x"+temp_list[i][2],16) + (int("0x"+section[3],16) - 1) & ~(int("0x"+section[3],16) - 1)).replace("0x","")
+                        temp_list.insert(i+1, section)
+                        inserted = True
+                        break
+                if inserted == False:
+                    if len(temp_list) == 0:
+                        section[4] = hex(int("0x"+next((x[3] for x in TLB_arr if x[0] == section[1])),16) + (int("0x"+section[3],16) - 1) & ~(int("0x"+section[3],16) - 1)).replace("0x","")
+                        temp_list.append(section)
+                    else:
+                        section[4] = hex(int("0x"+temp_list[len(temp_list)-1][4],16) + int("0x"+temp_list[len(temp_list)-1][2],16) + (int("0x"+section[3],16) - 1) & ~(int("0x"+section[3],16) - 1)).replace("0x","")
+                        temp_list.append(section)
+                   
+        temp_list_finished.extend(temp_list)
+        
+    return temp_list_finished
                 
 
 # put information into list
 with open('generated_memory_sections_average_case.csv', newline='') as f:
 	reader = csv.reader(f)
-	data = list(reader)
+	memory_data = list(reader)
+    
+with open('generated_tlbs_average_case.csv', newline='') as g:
+	reader = csv.reader(g)
+	TLB_data = list(reader)
     
 # remove blank lines and headers
-data = [x for x in data if x and x[0] != 'Name']
+memory_data = [x for x in memory_data if x and x[0] != 'Name']
+
+TLB_data = [x for x in TLB_data if x and x[0] != 'Name']
 
 # then sort by size
 # O(n + k)
-data, k = CountingSort(data, 2)
+memory_data, k = CountingSort(memory_data, 2)
 
 # then sort by alignment
 # O(n + k)
-data, k = CountingSort(data, 3)
+memory_data, k = CountingSort(memory_data, 3)
 
 # sort by TLB last
 # O(n + 10)
-converted_array = CountingSortStringPrep(data, 1)
-data = CountingSortString(data, 1, converted_array)
+converted_array = CountingSortStringPrep(memory_data, 1)
+memory_data = CountingSortString(memory_data, 1, converted_array)
 
 # put into buckets by TLB
-Buckets = Buckets(data)
+Buckets = Buckets(memory_data)
+
+# calculate addresses
+finished_memory = address_calculation(Buckets, TLB_data)
+
+# sort ascending - cant use counting sort because too much data
+finished_memory = sorted(finished_memory, key = lambda x: int("0x"+x[4],16))
